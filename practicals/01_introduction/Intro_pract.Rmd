@@ -1,0 +1,73 @@
+---
+title: "Introduction: fitting a multilevel hidden Markov model"
+mainfont: Arial
+params:
+  answers: true
+fontsize: 12pt
+urlcolor: blue
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    theme: paper
+    pandoc_args: --output=Intro_pract_answers.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mHMMbayes)
+# crisis <- readRDS("data/ESM_crisis.rds")
+```
+
+This is the first practical, where we introduce the dataset and we use it to fit a multilevel hidden Markov model. 
+
+You can use your preferred way of working in R to do the practicals. Our preferred way is this:
+
+- Create a new folder with a good name, e.g., `practicals_mHMM` 
+- Open RStudio
+- Create a new project from RStudio, which you associate with the folder
+- Create a `raw_data` subfolder
+- Create an R script for the current practical, e.g., `introduction.R`
+- Create your well-documented and [well-styled](https://style.tidyverse.org/) code in this R script
+
+The answers to the practicals are available in the `*_answers.html` files. Try to work out the answer yourself (e.g., inpsecting help files and examples in the help files provided in the `mHMMbayes` package, looking at the tutorial vignette available online) before looking at this!
+
+In all practicals in this workshop, we make use of the `mHMMbayes` package. You can load the package like 
+
+```{r, eval=FALSE}
+library(mHMMbayes)
+```
+
+In this practical, we will also use the following packages:
+
+```{r, eval=FALSE}
+library(ggplot2)
+```
+
+## The data
+We will be using the `ESM_crisis` dataset, which is a synthetic replication of the suicidal crisis ESM dataset that we introduced in the lecture. We have prepared the dataset for you to download [`here`](https://github.com/emmekeaarts/workshop_mHMM_march2024/data/ESM_crisis.rds). It is an `rds` file, which is a convenient, portable, and fast binary file format for R.
+
+---
+
+**Exercise 1**
+Download the dataset and save it in a nice location, e.g., a `raw_data` folder inside your R project.
+
+---
+
+---
+
+**Exercise 2**
+Load the dataset in R using the function `readRDS()`. Give the dataset the name `crisis`. Then, inspect the first few rows of the data.
+
+```{r, include = params$answers, eval=FALSE}
+crisis <- readRDS("../../data/ESM_crisis.rds")
+```
+
+```{r, include = params$answers, eval = FALSE}
+# inspect the first few rows
+head(crisis)
+```
+---
+
+
