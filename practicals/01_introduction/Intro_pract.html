@@ -1508,7 +1508,7 @@ Markov model</h1>
 
 
 <p>This is the first practical, where we introduce the dataset and we
-use it to fit a multilevel hidden Markov model.</p>
+use it to fit a (2 state) multilevel hidden Markov model.</p>
 <p>You can use your preferred way of working in R to do the practicals.
 Our preferred way is this:</p>
 <ul>
@@ -1525,20 +1525,31 @@ script</li>
 </ul>
 <p>The answers to the practicals are available in the
 <code>*_answers.html</code> files. Try to work out the answer yourself
-(e.g., inpsecting help files and examples in the help files provided in
-the <code>mHMMbayes</code> package, looking at the tutorial vignette
+(e.g., inspecting help files and examples in them provided in the
+<code>mHMMbayes</code> package, looking at the tutorial vignette
 available online) before looking at this!</p>
 <p>In all practicals in this workshop, we make use of the
-<code>mHMMbayes</code> package. You can load the package like</p>
+<code>mHMMbayes</code> package, version 1.0.0. You can load the package
+like</p>
 <pre class="r"><code>library(mHMMbayes)</code></pre>
 <p>In this practical, we will also use the following packages:</p>
 <pre class="r"><code>library(ggplot2)</code></pre>
 <div id="the-data" class="section level2">
 <h2>The data</h2>
-<p>We will be using the <code>ESM_crisis</code> dataset, which is a
-synthetic replication of the suicidal crisis ESM dataset that we
-introduced in the lecture. We have prepared the dataset for you to
-download <a href="https://github.com/emmekeaarts/workshop_mHMM_march2024/data/ESM_crisis.rds"><code>here</code></a>.
+<p>We will use an open access dataset from Rowland and Wenzel (2020),
+available on OSF <a href="https://osf.io/jmz2n/"><code>here</code></a>.
+The data consists of one-hundred twenty-five undergraduate students from
+the University of Mainz in Germany that completed a 40-day ambulatory
+assessment six times a day, reporting on their affective experiences
+<em>happy</em>, <em>excited</em>, <em>relaxed</em>, <em>satisfied</em>,
+<em>angry</em>, <em>anxious</em>, <em>depressed</em>, and <em>sad</em>.
+These items were scored with a visual analog slider from 0 to 100.
+Before the collection of the ESM measurements, participants of the study
+were randomly assigned to a group receiving a weekly mindfulness
+treatment during the ESM study and a control group. A cleaned version of
+the data kindly provided in the data archive as part of Haslbeck, Ryan,
+&amp; Dablander (2023), the repository can be found <a href="https://github.com/jmbh/EmotionTimeSeries"><code>here</code></a>,
+and the specific dataset we will be working with <a href="https://github.com/jmbh/EmotionTimeSeries/tree/master/DataClean/Rowland2020"><code>here</code></a>.
 It is an <code>rds</code> file, which is a convenient, portable, and
 fast binary file format for R.</p>
 <hr />
@@ -1548,9 +1559,97 @@ project.</p>
 <hr />
 <hr />
 <p><strong>Exercise 2</strong> Load the dataset in R using the function
-<code>readRDS()</code>. Give the dataset the name <code>crisis</code>.
-Then, inspect the first few rows of the data.</p>
+<code>readRDS()</code>. Give the dataset the name
+<code>emotion_data</code>. Then, inspect the first few rows of the
+data.</p>
 <hr />
+<hr />
+<p><strong>Exercise 3</strong> Inspect the data over time using
+visualization. Most useful is visualizing time sequences for subjects
+separately, e.g., by using the option
+<code>facet_wrap(vars(subj_id))</code> in ggplot.</p>
+<hr />
+</div>
+<div id="setting-up-the-multilevel-hidden-markov-model" class="section level2">
+<h2>Setting up the multilevel hidden Markov model</h2>
+<p>In this section, you will fit a 2-state multilevel hidden Markov
+model. For this, you need a <code>data.frame</code> in which only the
+affective variables you want to use in the model are included, plus the
+subject ID as the first column. Please feel free to only use a subset of
+the provided affective variables, but do make sure to select at least 2
+affective variables.</p>
+<hr />
+<p><strong>Exercise 4</strong> Create a dataset
+<code>emotion_mHMM</code> which has the subject ID variable in the first
+column, followed by only the affective variables you want to use in the
+hidden Markov model.</p>
+<hr />
+<hr />
+<p><strong>Exercise 5</strong> Set up the first set of model input
+arguments: <code>m</code> for the number of states the model should
+infer, <code>n_dep</code> for the number of dependent variables used for
+fitting the model, and starting values for gamma and the emission
+distribution, saved in the objects <code>start_gamma</code> and
+<code>start_emiss</code>, respectively.</p>
+<p>Note 1: <code>start_gamma</code> should be a <code>m</code> by
+<code>m</code> matrix and <code>start_emiss</code> should be a list with
+the number of elements equal to the the number of dependent variables
+used specified in <code>n_dep</code>. Each element within the list
+should be a matrix with 2 columns and <code>m</code> rows. The Normal
+emission distribution means are contained in the first column of this
+matrix, and the standard deviations of the state specific Normal
+emission distribution are contained int the second column of the
+matrix.</p>
+<p>Note 2: Make sure that the starting values are sensible. That is, for
+gamma, usually the elements contained on the diagonal (i.e., the
+self-transitions) are larger than the off-diagonal values. With respect
+to the emission distribution, if we assume a 2-state model, it is
+sensible to assume that we will have a ‘positive emotion’ state and a
+‘negative emotion’ state. Define the means of the variable and state
+specific emission distributions to align with this idea. Do not use
+equivalent means for one dependent variable over the states! Regarding
+the standard deviations of the emission distribution, define them such
+that the emission distribution for state 1 and 2 together cover the
+entire range of observations (remember, participants could use a slider
+ranging from 0 to 100) with reasonable support. For example, given our
+data, it would not make sense to use a standard deviation of 3 (as 95%
+of the mass of the distribution will only span mean+/- 2 * 3 values out
+of 100), but a standard deviation of 10 or 15 would make sense.</p>
+<hr />
+<hr />
+<p><strong>Exercise 6</strong> Set up a weakly informative prior for the
+continuous emission distribution using the function
+<code>prior_emiss_cont</code> and save the object in
+<code>emotion_prior_emiss</code>. Again, align the values of the
+hyper-prior means of the Normal distribution with your hypothesized
+structure of a ‘positive emotion’ state and a ‘negative emotion’ state.
+Do not use equavalent means over states within the same dependent
+variable. Tip: for an overview of the usage and an example, check the
+help file (<code>?prior_emiss_cont</code>).</p>
+<hr />
+</div>
+<div id="fitting-the-multilevel-hidden-markov-model" class="section level2">
+<h2>Fitting the multilevel hidden Markov model</h2>
+<p>Now we will use all ingredients to fit a 2 state multilevel hidden
+Markov model.</p>
+<p>500 iterations ~ 3 minutes on reasonably fast laptop</p>
+</div>
+<div id="inspecting-the-output" class="section level2">
+<h2>Inspecting the output</h2>
+<p>Inspect the global output by using the inbuilt print and summary
+options for the <code>mHMMbayes</code> package ()</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>J. Haslbeck, O. Ryan, &amp; F. Dablander (2023). Multimodality and
+skewness in emotion time series. Emotion, 23(8), 2117–2141. DOI:
+10.1037/emo0001218.</li>
+<li>Z. Rowland &amp; M. Wenzel (2020). Mindfulness and affect-network
+density: Does mindfulness facilitate disengagement from affective
+experiences in daily life?. Mindfulness, 11(5), 1253-1266. DOI:
+10.1007/s12671-020-01335-4</li>
+</ul>
 </div>
 
 

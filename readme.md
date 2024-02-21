@@ -62,6 +62,7 @@ For questions about this course, you can contact the instructor Emmeke ([e.aarts
 - basic introduction with continuous and categorical example 
 - running model: components of the mHMM function, starting values and priors  
 - obtaining and interpreting group parameters 
+
 - number of states (reference Phole 2017)
 - model checking: 
     - convergence (rho and traceplots)
@@ -70,6 +71,10 @@ For questions about this course, you can contact the instructor Emmeke ([e.aarts
     - checking state pattern similarity over subjects  
 - obtaining most likely sequence of states
 
+- discussion/final notes:  
+    - how many observations do we need? 
+    - please do sanity checks on your data! Visualize, and objective measures to detect shift in response (response times, no variance, etc)
+    - multivariate data! 
 
 
     

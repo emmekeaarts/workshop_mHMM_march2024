@@ -14,6 +14,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(mHMMbayes)
+library(ggplot2)
 ```
 
 
@@ -303,7 +304,7 @@ Given example data, assume
 <img src="./figures/predicted state dynamics new.png" width=900>
 </div>
 
-## Most likely nonverbal communication state sequences
+## Nonverbal communication state sequences
 
 <div align="center">
 <br>
@@ -345,6 +346,11 @@ Advantages:
 - Allowing incorporation of prior knowledge (through prior distribution specification) accommodates smaller sample sizes. 
 - Adds flexibility, making it relatively easy to extent to more complex models. 
 
+Disadvantages: 
+
+- Label switching problem (more prominent in continuous and count data)
+- Solution: sensible starting values and weakly informative priors; (hyper-prior values for) $\bar{\mu}_i$ or $\bar{\lambda}_i$ ordered in a sensible manner given data and process
+
 
 ## mHMMbayes - Metropolis within Gibbs sampler
 
@@ -368,7 +374,7 @@ Advantages:
 <img src="figures/example interaction data.png" width=730>
 </div>
 
-## Fitting a simple model - input
+## Fitting a simple model -- input
 
 Fitting a 3 state multilevel hidden Markov model on the nonverbal data: 
 
@@ -418,7 +424,7 @@ q_emiss <- c(3, 2, 2, 3, 2, 2)
 
 ``` 
 
-## Fitting a simple model - input
+## Fitting a simple model -- input
 ```{r, echo = TRUE}
 ## specifying starting values
  # Start values of the TPM
@@ -439,7 +445,7 @@ start_EM <- list(matrix(c(0.70, 0.20, 0.10, # vocalizing therapist
                  ) 
 ```
 
-## Fitting a simple model - input
+## Fitting a simple model -- input
 ```{r show fitting 2 state model, eval = FALSE, echo=TRUE}
 # Run a model without covariate(s) and default priors:
 out_3st <- mHMM(s_data = MHMM_nonverbal,
@@ -450,20 +456,20 @@ out_3st <- mHMM(s_data = MHMM_nonverbal,
 
 ```
 
-## Model output - print()
+## Model output -- print()
 ```{r, echo=TRUE}
 out_3st
 ```
 
 
 
-## Model output - summary()
+## Model output -- summary()
 ```{r, echo=TRUE}
 summary(out_3st)
 ```
 
 
-## State composition - obtain_emiss()
+## State composition -- obtain_emiss()
 ```{r, echo=TRUE}
 emiss_pop <- obtain_emiss(out_3st)
 emiss_pop
@@ -475,11 +481,102 @@ gamma_pop <- obtain_gamma(out_3st)
 gamma_pop
 ```
 
-## State dynamics at dyad level - obtain_gamma()
-```{r, echo=TRUE}
-gamma_subj <- obtain_gamma(out_3st, level = "subject")
-gamma_subj
+## Specifying (weakly) informative-priors -- gamma
+
+Transition probability matrix Gamma (prior specification is optional):
+```{r, echo = TRUE, eval=FALSE}
+prior_gamma(
+  m,                  # number of states in the model
+  gamma_mu0,          # hyper-prior mean values on the Multinomial logit intercepts
+  gamma_K0 = NULL,    # number of hypothetical subjects gamma_mu0 is based on
+  gamma_nu = NULL,    # degrees of freedom inverse Wishart hyper-prior on covariance 
+  gamma_V = NULL,     # hyper-prior variance-covariance matrix of Inverse Wishart 
+  n_xx_gamma = NULL   # number of level 2 covariates predicting gamma 
+)
+
+
+prob_to_int(
+  prob_matrix         # complete transition probability matrix gamma
+)
 ```
+
+## Specifying (weakly) informative-priors -- emission
+
+Categorical emission distribution (prior specification is optional): 
+```{r, echo = TRUE, eval=FALSE}
+
+prior_emiss_cat(
+  gen,               # general model properties m, n_dep, and q_emiss
+  emiss_mu0,         # hyper-prior mean values on the Multinomial logit intercepts
+  emiss_K0 = NULL,   # number of hypothetical subjects emiss_mu0 is based on
+  emiss_V = NULL,    # degrees of freedom inverse Wishart hyper-prior on covariance 
+  emiss_nu = NULL,   # hyper-prior variance-covariance matrix of Inverse Wishart 
+  n_xx_emiss = NULL  # number of level 2 covariates predicting emission distribution(s) 
+)
+
+
+prob_to_int(
+  prob_matrix         # complete categorical emission probability matrix 
+)
+```
+
+## Specifying (weakly) informative-priors -- emission
+
+Continuous emission distribution (prior specification is MANDATORY): 
+```{r, echo = TRUE, eval=FALSE}
+
+prior_emiss_cont(
+  gen,              # general model properties m and n_dep
+  emiss_mu0,        # hyper-prior mean values of the Normal emission distribution 
+  emiss_K0,         # number of hypothetical subjects emiss_mu0 is based on
+  emiss_V,          # degrees of freedom inverse Gamma hyper-prior on BETWEEN subject variance 
+  emiss_nu,         # hyper-prior variance of Inverse Gamma on BETWEEN subject variance 
+  emiss_a0,         # shape values of IG hyper-prior on emission standard deviation^2 
+  emiss_b0,         # scale values of IG hyper-prior on emission standard deviation^2 
+  n_xx_emiss = NULL # number of level 2 covariates predicting emission distribution(s) 
+)
+
+```
+
+
+## More on IG hyper-prior on emission $\sigma^2$
+
+Inverse Gamma hyper-prior on variance of Normal emission distribution: 
+
+```{r, warning =FALSE}
+
+a <- 1
+b <- 1
+sample <- 1/rgamma(10000, shape = a, rate = b)
+# x11()
+p.a1b1<- ggplot(data.frame(x = sample), aes(x=x)) + geom_density() +
+  ggtitle(paste0("Shape ", a, ", rate ", b)) + xlim(c(0, 30)) + xlab("Variance")
+
+a <- 1
+b <- 4
+sample <- 1/rgamma(10000, shape = a, rate = b)
+# x11()
+p.a1b4<- ggplot(data.frame(x = sample), aes(x=x)) + geom_density() +
+  ggtitle(paste0("Shape ", a, ", rate ", b)) + xlim(c(0, 30)) + xlab("Variance")
+
+a <- 1.5
+b <- 20  
+sample <- 1/rgamma(10000, shape = a, rate = b)
+# x11()
+p.a1.5b20<- ggplot(data.frame(x = sample), aes(x=x)) + geom_density() +
+  ggtitle(paste0("Shape ", a, ", rate ", b)) + xlim(c(0, 30)) + xlab("Variance")
+
+a <- 5
+b <- 20  
+sample <- 1/rgamma(10000, shape = a, rate = b)
+# x11()
+p.a5b20<- ggplot(data.frame(x = sample), aes(x=x)) + geom_density() +
+  ggtitle(paste0("Shape ", a, ", rate ", b)) + xlim(c(0, 30)) + xlab("Variance")
+
+cowplot::plot_grid(p.a1b1, p.a1b4, p.a1.5b20, p.a5b20)
+
+```
+
 
 ## References 
 

@@ -2,7 +2,7 @@
 title: "Introduction: fitting a multilevel hidden Markov model"
 mainfont: Arial
 params:
-  answers: true
+  answers: false
 fontsize: 12pt
 urlcolor: blue
 output: 
@@ -11,16 +11,16 @@ output:
     toc_depth: 2
     toc_float: true
     theme: paper
-    pandoc_args: --output=Intro_pract_answers.html
+    pandoc_args: --output=Intro_pract.html
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(mHMMbayes)
-# crisis <- readRDS("data/ESM_crisis.rds")
+emotion_data <- readRDS("./data/data_Rowland2020.rds")
 ```
 
-This is the first practical, where we introduce the dataset and we use it to fit a multilevel hidden Markov model. 
+This is the first practical, where we introduce the dataset and we use it to fit a (2 state) multilevel hidden Markov model. 
 
 You can use your preferred way of working in R to do the practicals. Our preferred way is this:
 
@@ -31,9 +31,9 @@ You can use your preferred way of working in R to do the practicals. Our preferr
 - Create an R script for the current practical, e.g., `introduction.R`
 - Create your well-documented and [well-styled](https://style.tidyverse.org/) code in this R script
 
-The answers to the practicals are available in the `*_answers.html` files. Try to work out the answer yourself (e.g., inpsecting help files and examples in the help files provided in the `mHMMbayes` package, looking at the tutorial vignette available online) before looking at this!
+The answers to the practicals are available in the `*_answers.html` files. Try to work out the answer yourself (e.g., inspecting help files and examples in them provided in the `mHMMbayes` package, looking at the tutorial vignette available online) before looking at this!
 
-In all practicals in this workshop, we make use of the `mHMMbayes` package. You can load the package like 
+In all practicals in this workshop, we make use of the `mHMMbayes` package, version 1.0.0. You can load the package like 
 
 ```{r, eval=FALSE}
 library(mHMMbayes)
@@ -46,7 +46,7 @@ library(ggplot2)
 ```
 
 ## The data
-We will be using the `ESM_crisis` dataset, which is a synthetic replication of the suicidal crisis ESM dataset that we introduced in the lecture. We have prepared the dataset for you to download [`here`](https://github.com/emmekeaarts/workshop_mHMM_march2024/data/ESM_crisis.rds). It is an `rds` file, which is a convenient, portable, and fast binary file format for R.
+We will use an open access dataset from Rowland and Wenzel (2020), available on OSF [`here`](https://osf.io/jmz2n/). The data consists of one-hundred twenty-five undergraduate students from the University of Mainz in Germany that completed a 40-day ambulatory assessment six times a day, reporting on their affective experiences *happy*, *excited*, *relaxed*, *satisfied*, *angry*, *anxious*, *depressed*, and *sad*. These items were scored with a visual analog slider from 0 to 100. Before the collection of the ESM measurements, participants of the study were randomly assigned to a group receiving a weekly mindfulness treatment during the ESM study and a control group. A cleaned version of the data kindly provided in the data archive as part of Haslbeck, Ryan, & Dablander (2023), the repository can be found [`here`](https://github.com/jmbh/EmotionTimeSeries), and the specific dataset we will be working with [`here`](https://github.com/jmbh/EmotionTimeSeries/tree/master/DataClean/Rowland2020). It is an `rds` file, which is a convenient, portable, and fast binary file format for R.
 
 ---
 
@@ -58,16 +58,178 @@ Download the dataset and save it in a nice location, e.g., a `raw_data` folder i
 ---
 
 **Exercise 2**
-Load the dataset in R using the function `readRDS()`. Give the dataset the name `crisis`. Then, inspect the first few rows of the data.
+Load the dataset in R using the function `readRDS()`. Give the dataset the name `emotion_data`. Then, inspect the first few rows of the data.
 
 ```{r, include = params$answers, eval=FALSE}
-crisis <- readRDS("../../data/ESM_crisis.rds")
+emotion_data <- readRDS("../../data/data_Rowland2020.rds")
 ```
 
-```{r, include = params$answers, eval = FALSE}
+```{r, include = params$answers}
 # inspect the first few rows
-head(crisis)
+head(emotion_data)
 ```
 ---
 
 
+---
+
+**Exercise 3**
+Inspect the data over time using visualization. Most useful is visualizing time sequences for subjects separately, e.g., by using the option `facet_wrap(vars(subj_id))` in ggplot. 
+
+```{r, include = params$answers}
+# inspect the first few rows
+library(ggplot2)
+
+# restructure the data for ggplot
+emotion_data$beep2 <- (emotion_data$dayno - 1) * 6 + emotion_data$beep
+
+ggplot_emotion <- rbind(data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$happy,
+                                 emotion = "happy"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$excited,
+                                 emotion = "excited"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$relaxed,
+                                 emotion = "relaxed"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$satisfied,
+                                 emotion = "satisfied"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$angry,
+                                 emotion = "angry"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$anxious,
+                                 emotion = "anxious"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$depressed,
+                                 emotion = "depressed"),
+                      data.frame(ID = emotion_data$subj_id, 
+                                 beep2 = emotion_data$beep2, 
+                                 outcome = emotion_data$sad,
+                                 emotion = "sad"))
+
+ggplot_emotion$emotion <- as.factor(ggplot_emotion$emotion)
+
+ggplot(ggplot_emotion[ggplot_emotion$ID %in% c(1:5),]) +
+  geom_line( mapping = aes(x = beep2, y = outcome, group = emotion, color = emotion)) +
+  facet_wrap(vars(ID), ncol = 1)
+
+
+```
+
+---
+
+## Setting up the multilevel hidden Markov model 
+
+In this section, you will fit a 2-state multilevel hidden Markov model. For this, you need a `data.frame` in which only the affective variables you want to use in the model are included, plus the subject ID as the first column.  Please feel free to only use a subset of the provided affective variables, but do make sure to select at least 2 affective variables. 
+
+---
+
+**Exercise 4**
+Create a dataset `emotion_mHMM` which has the subject ID variable in the first column, followed by only the affective variables you want to use in the hidden Markov model. 
+
+```{r, include = params$answers}
+# inspect the first few rows
+emotion_mHMM <- data.frame(subj_ID = emotion_data$subj_id,
+                           happy = emotion_data$happy,
+                           excited = emotion_data$excited,
+                           relaxed = emotion_data$relaxed,
+                           satisfied = emotion_data$satisfied,
+                           angry = emotion_data$angry,
+                           anxious = emotion_data$anxious,
+                           depressed = emotion_data$depressed,
+                           sad = emotion_data$sad)
+```
+
+---
+
+---
+
+**Exercise 5**
+Set up the first set of model input arguments: `m` for the number of states the model should infer, `n_dep` for the number of dependent variables used for fitting the model, and starting values for gamma and the emission distribution, saved in the objects `start_gamma` and `start_emiss`, respectively.
+
+Note 1: `start_gamma` should be a `m` by `m` matrix and `start_emiss` should be a list with the number of elements equal to the the number of dependent variables used specified in `n_dep`. Each element within the list should be a matrix with 2 columns and `m` rows. The Normal emission distribution means are contained in the first column of this matrix, and the standard deviations of the state specific Normal emission distribution are contained int the second column of the matrix. 
+
+Note 2: Make sure that the starting values are sensible. That is, for gamma, usually the elements contained on the diagonal (i.e., the self-transitions) are larger than the off-diagonal values. With respect to the emission distribution, if we assume a 2-state model, it is sensible to assume that we will have a 'positive emotion' state and a 'negative emotion' state. Define the means of the variable and state specific emission distributions to align with this idea. Do not use equivalent means for one dependent variable over the states! Regarding the standard deviations of the emission distribution, define them such that the emission distribution for state 1 and 2 together cover the entire range of observations (remember, participants could use a slider ranging from 0 to 100) with reasonable support. For example, given our data, it would not make sense to use a standard deviation of 3 (as 95% of the mass of the distribution will only span mean+/- 2 * 3 values out of 100), but a standard deviation of 10 or 15 would make sense. 
+
+```{r, include = params$answers}
+# setting up input parameters, part 1
+m <- 2
+n_dep <- 8
+
+start_gamma <- matrix(c(0.7, 0.3, 
+                        0.3, 0.7), byrow = TRUE, ncol = m, nrow = m)
+
+start_emiss <- list(matrix(c(70, 15,                                     # happy
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # excited
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # relaxed
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # satisfied
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # angry
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # anxious
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # depressed
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # sad
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m))
+```
+
+---
+
+---
+
+**Exercise 6**
+Set up a weakly informative prior for the continuous emission distribution using the function `prior_emiss_cont` and save the object in `emotion_prior_emiss`. Again, align the values of the hyper-prior means of the Normal distribution with your hypothesized structure of a 'positive emotion' state and a 'negative emotion' state. Do not use equavalent means over states within the same dependent variable. Tip: for an overview of the usage and an example, check the help file (`?prior_emiss_cont`). 
+
+```{r, include = params$answers}
+# specifying weakly informative prior for continuous emission distributions
+
+emotion_prior_emiss <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(70, 30), nrow = 1),  # happy
+                   matrix(c(70, 30), nrow = 1),  # excited
+                   matrix(c(70, 30), nrow = 1),  # relaxed
+                   matrix(c(70, 30), nrow = 1),  # satisfied
+                   matrix(c(15, 40), nrow = 1),  # angry
+                   matrix(c(15, 40), nrow = 1),  # anxious
+                   matrix(c(15, 40), nrow = 1),  # depressed
+                   matrix(c(15, 40), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+```
+
+---
+
+## Fitting the multilevel hidden Markov model 
+
+Now we will use all ingredients to fit a 2 state multilevel hidden Markov model. 
+
+500 iterations ~ 3 minutes on reasonably fast laptop 
+
+
+## Inspecting the output 
+
+Inspect the global output by using the inbuilt print and summary options for the `mHMMbayes` package ()
+
+
+## References
+
+- J. Haslbeck, O. Ryan, & F. Dablander (2023). Multimodality and skewness in emotion time series. Emotion, 23(8), 2117–2141. DOI: 10.1037/emo0001218.
+- Z. Rowland & M. Wenzel (2020). Mindfulness and affect-network density: Does mindfulness facilitate disengagement from affective experiences in daily life?. Mindfulness, 11(5), 1253-1266. DOI: 10.1007/s12671-020-01335-4
