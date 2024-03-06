@@ -2,7 +2,7 @@
 title: "Introduction: fitting a multilevel hidden Markov model"
 mainfont: Arial
 params:
-  answers: false
+  answers: true
 fontsize: 12pt
 urlcolor: blue
 output: 
@@ -17,6 +17,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(mHMMbayes)
+library(viridis)
+library(reshape2)
 emotion_data <- readRDS("./data/data_Rowland2020.rds")
 ```
 
@@ -43,6 +45,8 @@ In this practical, we will also use the following packages:
 
 ```{r, eval=FALSE}
 library(ggplot2)
+library(reshape2)
+library(viridis)    # optional
 ```
 
 ## The data
@@ -191,7 +195,7 @@ start_emiss <- list(matrix(c(70, 15,                                     # happy
 ---
 
 **Exercise 6**
-Set up a weakly informative prior for the continuous emission distribution using the function `prior_emiss_cont` and save the object in `emotion_prior_emiss`. Again, align the values of the hyper-prior means of the Normal distribution with your hypothesized structure of a 'positive emotion' state and a 'negative emotion' state. Do not use equavalent means over states within the same dependent variable. Tip: for an overview of the usage and an example, check the help file (`?prior_emiss_cont`). 
+Set up a weakly informative prior for the continuous emission distribution using the function `prior_emiss_cont()` and save the object in `emotion_prior_emiss`. Again, align the values of the hyper-prior means of the Normal distribution with your hypothesized structure of a 'positive emotion' state and a 'negative emotion' state. Do not use equavalent means over states within the same dependent variable. Tip: for an overview of the usage and an example, check the help file (`?prior_emiss_cont`). 
 
 ```{r, include = params$answers}
 # specifying weakly informative prior for continuous emission distributions
@@ -219,17 +223,232 @@ emotion_prior_emiss <- prior_emiss_cont(
 
 ## Fitting the multilevel hidden Markov model 
 
-Now we will use all ingredients to fit a 2 state multilevel hidden Markov model. 
+Now we will use all ingredients to fit a 2 state multilevel hidden Markov model using the function `mHMM()`. For now, we recommend setting the number of iterations `J` as part of the input parameter `mcmc` to 500, and specify a burn in (`burn_in`) of 200. On a reasonably fast laptop, this should take about 3 minutes, assuming you are using all 8 dependent variables as input. In the mean time, you can have a nice conversation with your neighbor or workshop instructor :) . When fitting a multilevel hidden Markov model for research purposes, we recommend suing at least 2.000 iterations, and using traceplots and the Gelman Rubin statistic to ensure convergence with the used number of iterations and the appropriate burn in period, we will discuss this in the second practical of this workshop. 
 
-500 iterations ~ 3 minutes on reasonably fast laptop 
+---
+
+**Exercise 7**
+Fit a 2 state multilevel hidden Markov model using the function `mHMM()`, and save your fitted model in an object named `out_2st_emotion`. See below for the general structure of the `mHMM()` function, you only have to fill in the dots. The provided code assumes continuous observations, no level 2 covariates and only a prior on the Normal emission distribution. 
+
+Note: the starting values which need to specified at the argument `start_val` should be a list, which in the first element contains the starting values for the transition probabilities gamma, and in the subsequent elements contain the starting values for the emission distributions for each of the dependent variables. Hence, the list provided to `start_val` should be a list containing 1 + `n_dep` elements. The list cannot be a nested list (i.e., a list containing multiple levels of nesting). 
+
+```{r, eval = FALSE}
+# Run a model without covariate(s) and default priors:
+out_2st_emotion <- mHMM(s_data = ...,
+                data_distr = "continuous",
+                gen = list(m = ..., n_dep = ...),
+                start_val = ...,
+                mcmc = list(J = ..., burn_in = ...))
+```
 
 
-## Inspecting the output 
+```{r, eval = FALSE, include = params$answers}
+# Run a model without covariate(s) and default priors:
+out_2st_emotion <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        start_val = c(list(start_gamma), start_emiss),
+                        emiss_hyp_prior = emotion_prior_emiss,
+                        mcmc = list(J = 500, burn_in = 200))
 
-Inspect the global output by using the inbuilt print and summary options for the `mHMMbayes` package ()
+```
 
+```{r, echo=FALSE}
+out_2st_emotion <- readRDS("./data/out_2st_emotion.rds")
+```
+
+---
+
+## Inspecting general model output 
+
+---
+
+**Exercise 8**
+Inspect the global output by using the inbuilt `print()` and `summary()` options for a class `mHMM` object created by using the function `mHMM()` within the `mHMMbayes` package. How many subjects were included in the analysis? On average, do students remain within one and the same state for a long time? What mood do each of the states represent? 
+
+```{r,  include = params$answers}
+# Inspect general model output
+out_2st_emotion 
+
+summary(out_2st_emotion)
+
+```
+
+---
+
+To facilitate easy post-processing (e.g., visualizing), the transition probability gamma and emission distribution parameters can be obtained separately and saved within an object using the functions `obtain_gamma()` and `obtain_emiss()`
+
+---
+
+**Exercise 9**
+Save the group level transition probabilities gamma in an object named `gamma_group`, and the group level emission distribution parameters in an object named `emiss_group`, using the functions `obtain_gamma()` and `obtain_emiss()`, respectively. Inspect the objects. 
+
+```{r,  include = params$answers}
+# save group level parameters 
+gamma_group <- obtain_gamma(out_2st_emotion) 
+gamma_group
+
+emiss_group <- obtain_emiss(out_2st_emotion) 
+emiss_group
+
+```
+
+---
+
+## Visualizing the obtained output  
+
+Especially when you have a large number of states and/or a large number of dependent variables, visualizing the group level parameters can be very helpful. 
+
+---
+
+**Exercise 10**
+Visualize the group level transition probabilities gamma. Tip: for objects created using the function `obtain_gamma()`, an automated plotting function is available. Use it like so: `plot(object)`. In addition, in the answers a suggestion for plotting is given using `ggplot`. 
+
+```{r,  include = params$answers}
+# plotting group level gamma 
+plot(gamma_group)
+
+# plotting group level gamma using ggplot
+library(viridis)
+
+# restructuring data for ggplot
+colnames(gamma_group) <- paste0(1:m)
+rownames(gamma_group) <- paste0(1:m)
+
+melted_gamma_group <- melt(gamma_group)
+colnames(melted_gamma_group) <- c("From_state", "To_state", "prob")
+melted_gamma_group$From_state <- factor(melted_gamma_group$From_state)
+melted_gamma_group$To_state <- factor(melted_gamma_group$To_state)
+
+# ussing ggplot 
+ggplot(data = melted_gamma_group, aes(x=To_state, y = From_state , fill=prob)) + 
+  geom_tile(color = "white") +
+  scale_fill_distiller(palette = "Spectral", limits = c(0,1), name = "State switching\nprobability") +
+  geom_text(aes(To_state, From_state, label = round(prob,2)), color = "white", size = 4) +
+  theme_minimal()+ 
+  ylab("From mood state") + xlab("To mood state") +
+  scale_y_discrete(limits=rev) +
+  coord_fixed()
+
+
+```
+
+---
+
+---
+
+**Exercise 11**
+Visualize the group level emission distributions. Various visualizations are possible, for example bar plots depicting the emission distribution means over states and dependent variables, or depicting the densities of the normal emission distributions, combining information on both the mean and standard deviation. 
+
+```{r,  include = params$answers}
+# plotting group level emissions, bar plot
+
+## reshaping data for ggplot to make one plot simultaneously for all dependent variables 
+## meaning: one matrix containing all state and variable dependent means, with state and mood as variable 
+emiss_group <- lapply(emiss_group, function(x,m){rownames(x) <- paste0(1:m);x}, m = m)
+emiss_group_melt <- lapply(emiss_group, melt)
+emiss_group_melt <- do.call(rbind, emiss_group_melt)
+emiss_group_melt <- emiss_group_melt[emiss_group_melt$Var2 == "Mean", c(1, 3)]
+colnames(emiss_group_melt) <- c("State", "Mean")
+emiss_group_melt$Dep <- factor(c(rep(names(emiss_group), each = m)), levels = names(emiss_group))
+emiss_group_melt$State <- factor(emiss_group_melt$State, label = 1:m)
+
+## plot
+ggplot(emiss_group_melt, aes(x = State, y = Mean, fill = Dep)) +
+         geom_bar(stat="identity") +
+  facet_grid(cols = vars(Dep)) + 
+  theme_minimal() +
+  theme(legend.position="none") +
+  xlab("Mood state")
+
+# plotting group level emissions, distribution density
+## obtaining probability for observations within the range 1 to 100 given state and variable dependent mean and SD 
+### creating output matrix
+len <- 200
+grid <- seq(1,100, length = len)
+emiss_dens <- data.frame(State = factor(rep(rep(1:m, each = len), n_dep), levels = 1:m), 
+                         Dep = factor(c(rep(names(emiss_group), each = m * len)), levels = c(names(emiss_group))), 
+                         X = rep(grid, m*n_dep), 
+                         Prob = NA)
+
+### filling in the probabilities
+for(q in 1:n_dep){
+  for(i in 1:m){
+    emiss_dens$Prob[((q-1) * len * m + (i-1) * len + 1):((q-1) * len * m + (i-1) * len + len)] <- 
+      dnorm(emiss_dens$X[((q-1) * len * m + (i-1) * len + 1):((q-1) * len * m + (i-1) * len + len)],
+            mean = emiss_group[[q]][i,1], sd = emiss_group[[q]][i,2])
+  }
+}
+
+## plot 
+ggplot(emiss_dens, aes(X, color = State))  + 
+  # geom_density() + 
+  xlim(c(0,100)) + ylim(c(0,0.05)) +
+  geom_line(aes(y = Prob)) +
+  geom_vline(data = emiss_group_melt, aes(xintercept = Mean, colour = as.factor(State)), linetype="dashed", linewidth = 0.6) +
+  xlab("Mood value") +
+  facet_wrap(vars(Dep)) + 
+  theme_minimal() 
+```
+
+---
+
+
+## Obtaining the most likely sequence of hidden states 
+
+Using the obtained (subject specific) parameter estimates and the complete sequence of observations for each subject, we can infer the most likely sequence of states for each subject. To obtain the probability of each state at each point in time (where the sequence of states with the highest probability forms the sequence of most likely states), we make use of the Viterbi algorithm (Viterbi, 1967). In the package `mHMMbayes`, (an extended version of) the Viterbi algorithm is implemented in the function `vit_mHMM()`. The required input is the object that contains the fitted model generated by the function `mHMM()`, and the data used as input when fitting the multilevel hidden Markov model. 
+
+---
+
+**Exercise 12**
+Using the function `vit_mHMM()`, the object `out_2st_emotion` containing our fitted multilevel HMM model, and the data `emotion_mHMM`, obtain the most likely hidden state sequence. Save the state sequences in the object `emotion_states_2st`, and inspect the object. 
+
+```{r,  include = params$answers}
+
+emotion_states_2st <- vit_mHMM(out_2st_emotion, emotion_mHMM)
+head(emotion_states_2st)
+table(emotion_states_2st$subj, emotion_states_2st$state)
+```
+
+---
+
+To inspect the obtained most likely state sequences, plotting them is most useful. State sequences can be plotted per subject, or alternatively, together with the observed data. 
+
+---
+
+**Exercise 13**
+
+Plot the inferred state sequence over a time for a selection of the subjects within the data. Tip: to plot the state sequences over time, a new variable denoting beep moment needs to be added to the matrix containing the inferred states. 
+
+```{r,  include = params$answers}
+emotion_states_2st <- data.frame(subj = emotion_states_2st$subj, state =  emotion_states_2st$state, beep = rep(c(1:240), out_2st_emotion$input$n_subj))
+emotion_states_2st$state <- factor(emotion_states_2st$state, labels = paste("state", 1:m))
+
+ggplot(emotion_states_2st[emotion_states_2st$subj %in% c(1:10),]) +
+  geom_rect(aes(xmin = beep, ymin = 0, xmax = beep + 1, ymax = 1, fill = state)) +
+  scale_fill_manual(values=alpha(c("state 1" = "#5ab4ac", "state 2" = "#DE7862FF"))) +
+  facet_wrap(vars(subj), ncol = 1) + 
+  xlab("Beep") + 
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+---
+
+
+## Conclusion 
+
+In this first practical, we have loaded and inspected our data, fitted a simple 2 state multilevel hidden Markov model, investigated and visualized our group level parameters, and obtained (and visualized) the most likely sequence of hidden states. In the next practical, we well focus on the model selection problem (how many states should we use), obtaining and interpreting subject specific parameters, and model checking (inspecting convergence and using posterior predictive checks to assure a good match between the model and the observed data). If you finished early with this part, feel free to already start on the second part (or take a slightly longer break). 
+
+
+
+---
 
 ## References
 
-- J. Haslbeck, O. Ryan, & F. Dablander (2023). Multimodality and skewness in emotion time series. Emotion, 23(8), 2117–2141. DOI: 10.1037/emo0001218.
-- Z. Rowland & M. Wenzel (2020). Mindfulness and affect-network density: Does mindfulness facilitate disengagement from affective experiences in daily life?. Mindfulness, 11(5), 1253-1266. DOI: 10.1007/s12671-020-01335-4
+- Haslbeck, J., Ryan, O., & Dablander, F. (2023). Multimodality and skewness in emotion time series. Emotion, 23(8), 2117–2141. DOI: 10.1037/emo0001218.
+- Rowland, Z. & Wenzel, M. (2020). Mindfulness and affect-network density: Does mindfulness facilitate disengagement from affective experiences in daily life?. Mindfulness, 11(5), 1253-1266. DOI: 10.1007/s12671-020-01335-4
+- Viterbi, A. (1967). “Error bounds for convolutional codes and an asymptotically optimum decoding algorithm.” IEEE transactions on Information Theory, 13(2), 260–269.

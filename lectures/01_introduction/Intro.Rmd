@@ -282,33 +282,11 @@ Given example data, assume
 <img src="./figures/State dynamics.png" width=450>
 </div>
 
-
-## Explaining heterogeneity - including covariate(s)
-
-<div align="center">
-<br>
-<img src="./figures/Predicted and observed transition probabilities.png" width=800>
-</div>
-
-## Predicted nonverbal state dynamics
-
-<div align="center">
-<br>
-<img src="./figures/predicted state dynamics new - reduced.png" width=900>
-</div>
-
-## Predicted nonverbal state dynamics
-
-<div align="center">
-<br>
-<img src="./figures/predicted state dynamics new.png" width=900>
-</div>
-
 ## Nonverbal communication state sequences
 
 <div align="center">
 <br>
-<img src="./figures/predicted states new.png" width=950>
+<img src="./figures/predicted states new - one patient.png" width=850>
 </div>
 
 
@@ -361,7 +339,7 @@ Disadvantages:
     - observed event sequence for each subject
     - sampled hidden state sequence for each subject
     - group-level parameter distributions
-    - draw new subject-specific parameters using Random Walk (RW) Metropolis sampler
+    - draw new subject-specific parameters using RW Metropolis sampler
 5. Repeat step 1-4 a very large number of times
 
 ## The mHMMbayes package: an example
@@ -466,19 +444,6 @@ out_3st
 ## Model output -- summary()
 ```{r, echo=TRUE}
 summary(out_3st)
-```
-
-
-## State composition -- obtain_emiss()
-```{r, echo=TRUE}
-emiss_pop <- obtain_emiss(out_3st)
-emiss_pop
-```
-
-## State dynamics - obtain_gamma()
-```{r, echo=TRUE}
-gamma_pop <- obtain_gamma(out_3st)
-gamma_pop
 ```
 
 ## Specifying (weakly) informative-priors -- gamma
