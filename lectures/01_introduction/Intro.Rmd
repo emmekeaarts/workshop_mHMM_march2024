@@ -46,10 +46,13 @@ Uniquely suited to provide detailed information on psychological and behavioral 
 <div align="center">
 <br>
 <br>
-<font size="10">Empirical example I
+<br>
+<font size="10"> **Empirical example I**</font>
 <br>
 <br>
-Capturing (suicidal) crisis dynamics </font>
+<br>
+<br>
+<font size="6"> Capturing (suicidal) crisis dynamics </font>
 </div>
 
 ## Capturing crisis dynamics using ESM data
@@ -198,10 +201,13 @@ Pairing fine grained ESM data with multilevel HMM, we
 <div align="center">
 <br>
 <br>
-<font size="10">Empirical example II
+<br>
+<font size="10"> **Empirical example II**</font>
 <br>
 <br>
-Nonverbal interpersonal interaction in patient-therapist dyads </font>
+<br>
+<br>
+<font size="6"> Nonverbal interpersonal interaction in patient-therapist dyads </font>
 </div>
 
 
@@ -298,11 +304,15 @@ Given example data, assume
 <div align="center">
 <br>
 <br>
-<font size="10"> mHMMbayes
+<br>
+<font size="10"> **mHMMbayes**</font>
 <br>
 <br>
-R package for multilevel hidden Markov models using Bayesian estimation </font>
+<br>
+<br>
+<font size="6"> R package for multilevel hidden Markov models using Bayesian estimation </font>
 </div>
+
 
 
 ## mHMMbayes
@@ -385,7 +395,7 @@ start_EM <- list(matrix(c(0.70, 0.20, 0.10, # vocalizing therapist
                            0.90, 0.10,
                            0.35, 0.65), byrow = TRUE, nrow = m, ncol = q_emiss[6])) 
 
-out_3st <- readRDS("./out_vll_3st.rds")
+out_3st <- readRDS("./data/out_vll_3st.rds")
 out_3st 
 ```
 

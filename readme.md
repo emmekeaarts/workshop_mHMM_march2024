@@ -34,43 +34,34 @@ install.packages(c("ggplot2", "mHMMbayes"))
 
 ## Workshop schedule & materials
 
-| Time  | Duration | Activity     | Content                                            | link |
-| :---: | :------: | :----------- | :------------------------------------------------- | :--- |
-| 13:30 | 45       | Lecture      | Introduction & multilevel hidden Markov model      | [`intro.pdf`](./lectures/01_introduction/intro.pdf) |
-| 14:15 | 45       | Practical    | Fitting a mHMM + group level parameters            | [`intro.html`](./practicals/01_introduction/intro.html) |
-| 15:00 | 15       | Break        |                                                    |      |
-| 15:15 | 45       | Lecture      | Model selection and fit + subject level parameters | [`fit_and_subject_level.pdf`](./lectures/02_fit_and_subject_level/fit_and_subject_level.pdf) |
-| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters | [`fit_and_subject_level.html`](./practicals/02_fit_and_subject_level/fit_and_subject_level.html) |
-| 16:45 | 15       | Conclusion   | Conclusion + questions                             |  [`conclusion.pdf`](./lectures/03_discussion/discussion.pdf)    |
+| Time  | Duration | Activity     | Content                                                         | link |
+| :---: | :------: | :----------- | :-------------------------------------------------------------- | :--- |
+| 13:30 | 45       | Lecture      | Introduction & multilevel hidden Markov model                   | [`intro.pdf`](./lectures/01_introduction/Intro.html) |
+| 14:15 | 45       | Practical    | Fitting a mHMM + group level parameters                         | [`intro.html`](./practicals/01_introduction/intro_pract.html) |
+| 15:00 | 15       | Break        |                                                                 |      |
+| 15:15 | 45       | Lecture      | Model selection and fit + subject level parameters + covariates | [`fit_and_subject_level.pdf`](./lectures/02_More_advanced/More_advanced.hmtl) |
+| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters + covariates | [`fit_and_subject_level.html`](./practicals/02_more_advanced/More_advanced_pract.html) |
+| 16:45 | 15       | Conclusion   | Conclusion + questions                                          |  [`conclusion.pdf`](./lectures/03_final_points/Final_points.html)    |
 
-You can download the dataset we have prepared from here: [`xx`](./data/xx.rds). Save it in a nicely accessible place, we will be using it in every practical.
+You can download the dataset we will be using from [`here`](https://github.com/jmbh/EmotionTimeSeries/tree/master/DataClean/Rowland2020), see practical 1 for an introduction of the dataset and references. Save it in a nicely accessible place, we will be using it in every practical.
 
 
 ## Additional links
 
-- Tutorial vignette package: 
-- Estimation vignette package: 
-- HMM book zuchinni
-- papers.. 
+- Source paper on hidden markov models: L. R. Rabiner, "A tutorial on hidden Markov models and selected applications in speech recognition," in Proceedings of the IEEE, vol. 77, no. 2, pp. 257-286, Feb. 1989, doi: 10.1109/5.18626.  [link](https://doi.org/10.1109/5.18626)
+- Introductory book on hidden Markov models in R:  Hidden Markov Models for Time Series: An Introduction Using R, by Walter Zucchini, Iain L. Macdonald, and Roland Langrock. Published by CRC Press, 2016.
+- [Tutorial vignette mHMMbayes package](https://cran.r-project.org/web/packages/mHMMbayes/vignettes/tutorial-mhmm.html)
+- [Estimation vignette mHMMbayes package](https://cran.r-project.org/web/packages/mHMMbayes/vignettes/estimation-mhmm.pdf)
+- Example of multilevel HMM applied to [bipolar disorder](https://osf.io/preprints/psyarxiv/egp82/) using continuous input data
+- Example of multilevel HMM applied to [nonverbal communication in patient-therapist dyads](https://doi.org/10.1016/j.jadr.2023.100635) using continuous input data
+- Example of multilevel HMM for [neural spiking based behavioural event states](https://doi.org/10.1111/ejn.16065) using count data input
 
 
 ## Contact
 
 For questions about this course, you can contact the instructor Emmeke ([e.aarts@uu.nl](mailto:e.aarts@uu.nl)) directly. 
 
-## Development notes to me: 
-- number of states (reference Phole 2017)
-- obtaining and interpreting subject specific parameters 
-    - checking state pattern similarity over subjects  
-- model checking: 
-    - convergence (rho and traceplots)
-    - PPCs 
 
-- discussion/final notes:  
-    - how many observations do we need? 
-    - please do sanity checks on your data! Visualize, and objective measures to detect shift in response (response times, no variance, etc)
-    - multivariate data! 
-    - covariates 
 
 
     

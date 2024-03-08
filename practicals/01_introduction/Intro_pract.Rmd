@@ -11,7 +11,7 @@ output:
     toc_depth: 2
     toc_float: true
     theme: paper
-    pandoc_args: --output=Intro_pract.html
+    pandoc_args: --output=Intro_pract_answers.html
 ---
 
 ```{r setup, include=FALSE}

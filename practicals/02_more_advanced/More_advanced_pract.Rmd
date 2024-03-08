@@ -1,0 +1,48 @@
+---
+title: "More advanced matters"
+mainfont: Arial
+params:
+  answers: true
+fontsize: 12pt
+urlcolor: blue
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    theme: paper
+    pandoc_args: --output=More_advanced_pract.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mHMMbayes)
+library(viridis)
+library(reshape2)
+emotion_data <- readRDS("./data/data_Rowland2020.rds")
+```
+
+This is the second practical, where we will into more advanced matters: subject specific parameters, covariates, model selection, and model fit. In contrary to the first practical, the different parts do not build up on oneanother, so you are free to choose any order you like, starting with the topic you find most interesting. There is quite some material and it is likely you will not be able to finish all of them, but the topics you have skipped can be completed at your own conveinience at a later moment. 
+
+The answers to the practicals are available in the `*_answers.html` files. Try to work out the answer yourself (e.g., inspecting help files and examples in them provided in the `mHMMbayes` package, looking at the tutorial vignette available online) before looking at this!
+
+In all practicals in this workshop, we make use of the `mHMMbayes` package, version 1.0.0. You can load the package like 
+
+```{r, eval=FALSE}
+library(mHMMbayes)
+```
+
+In this practical, we will also use the following packages:
+
+```{r, eval=FALSE}
+library(ggplot2)
+library(reshape2)
+library(viridis)    # optional
+```
+
+## Model selection
+
+One of the challenges when using hidden Markov models is the number of states to choose. Here, we will limit ourselves to models with 2, 3, and 4 states. As model checking is discussed at a later point in the practical, we will investigate the different models based on the state composition and the model fit criterion AIC. The 2-state model was fitted in the first practical, and saved in the object `out_2st_emotion`. 
+
+
+
