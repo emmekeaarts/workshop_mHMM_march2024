@@ -37,11 +37,11 @@ install.packages(c("ggplot2", "mHMMbayes"))
 | Time  | Duration | Activity     | Content                                                         | link |
 | :---: | :------: | :----------- | :-------------------------------------------------------------- | :--- |
 | 13:30 | 45       | Lecture      | Introduction & multilevel hidden Markov model                   | [`intro.pdf`](./lectures/01_introduction/Intro.html) |
-| 14:15 | 45       | Practical    | Fitting a mHMM + group level parameters                         | [`intro.html`](./practicals/01_introduction/intro_pract.html) |
+| 14:15 | 45       | Practical    | Fitting a mHMM + group level parameters                         | [`intro.html`](./practicals/01_introduction/Intro_pract.html) |
 | 15:00 | 15       | Break        |                                                                 |      |
-| 15:15 | 45       | Lecture      | Model selection and fit + subject level parameters + covariates | [`fit_and_subject_level.pdf`](./lectures/02_More_advanced/More_advanced.hmtl) |
-| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters + covariates | [`fit_and_subject_level.html`](./practicals/02_more_advanced/More_advanced_pract.html) |
-| 16:45 | 15       | Conclusion   | Conclusion + questions                                          |  [`conclusion.pdf`](./lectures/03_final_points/Final_points.html)    |
+| 15:15 | 45       | Lecture      | Model selection and fit + subject level parameters + covariates | [`More_advanced.hmtl`](./lectures/02_More_advanced/More_advanced.html) |
+| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters + covariates | [`More_advanced_pract.html`](./practicals/02_more_advanced/More_advanced_pract.html) |
+| 16:45 | 15       | Conclusion   | Final points + questions                                        |  [`Final_points.html`](./lectures/03_final_points/Final_points.html)    |
 
 You can download the dataset we will be using from [`here`](https://github.com/jmbh/EmotionTimeSeries/tree/master/DataClean/Rowland2020), see practical 1 for an introduction of the dataset and references. Save it in a nicely accessible place, we will be using it in every practical.
 
