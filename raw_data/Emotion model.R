@@ -1,4 +1,5 @@
 
+library(mHMMbayes)
 emotion_data <- readRDS("./raw_data/data_Rowland2020.rds")
 emotion_data$beep2 <- (emotion_data$dayno - 1) * 6 + emotion_data$beep
 
@@ -52,6 +53,10 @@ emotion_mHMM <- data.frame(subj_ID = emotion_data$subj_id,
                            depressed = emotion_data$depressed,
                            sad = emotion_data$sad)
 
+
+#####################
+## 2 state model ####
+#####################
 m <- 2
 n_dep <- 8
 
@@ -113,6 +118,152 @@ plot(emiss_group)
 
 plot(out_2st_emotion, component = "emiss", dep = 8)
 
+#####################
+## 3 state model ####
+#####################
+## general model properties
+m <- 3
+n_dep <- 8
+
+## starting values for gamma
+start_gamma_3st <- matrix(c(0.8, 0.1, 0.1,
+                            0.1, 0.8, 0.1,
+                            0.1, 0.1, 0.8), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_3st <- list(matrix(c(80, 10,                                     # happy
+                                 50, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # excited
+                                 50, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # relaxed
+                                 50, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # satisfied
+                                 50, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # angry
+                                 30, 10,
+                                 50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # anxious
+                                 30, 10,
+                                 50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # depressed
+                                 30, 10,
+                                 50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # sad
+                                 30, 10,
+                                 50, 15), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_3st <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 50, 20), nrow = 1),  # happy
+                   matrix(c(80, 50, 20), nrow = 1),  # excited
+                   matrix(c(80, 50, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 50, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 30, 50), nrow = 1),  # angry
+                   matrix(c(10, 30, 50), nrow = 1),  # anxious
+                   matrix(c(10, 30, 50), nrow = 1),  # depressed
+                   matrix(c(10, 30, 50), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+out_3st_emotion <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        start_val = c(list(start_gamma_3st), start_emiss_3st),
+                        emiss_hyp_prior = emotion_prior_emiss_3st,
+                        mcmc = list(J = 500, burn_in = 200))
+
+saveRDS(out_3st_emotion, file = "out_3st_emotion.rds")
+
+summary(out_3st_emotion)
+out_3st_emotion
+
+#####################
+## 4 state model ####
+#####################
+## general model properties
+m <- 4
+n_dep <- 8
+
+## starting values for gamma
+start_gamma_4st <- matrix(c(0.7, 0.1, 0.1, 0.1,
+                            0.1, 0.7, 0.1, 0.1,
+                            0.1, 0.1, 0.7, 0.1,
+                            0.1, 0.1, 0.1, 0.7), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_4st <- list(matrix(c(80, 10,                                     # happy
+                                 60, 10,
+                                 40, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # excited
+                                 60, 10,
+                                 40, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # relaxed
+                                 60, 10,
+                                 40, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(80, 10,                                     # satisfied
+                                 60, 10,
+                                 40, 10,
+                                 20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # angry
+                                 20, 10,
+                                 40, 10,
+                                 60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # anxious
+                                 320, 10,
+                                 40, 10,
+                                 60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # depressed
+                                 20, 10,
+                                 40, 10,
+                                 60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                        matrix(c(10,  5,                                     # sad
+                                 20, 10,
+                                 40, 10,
+                                 60, 10), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_4st <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 60, 40, 20), nrow = 1),  # happy
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # excited
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # angry
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # anxious
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # depressed
+                   matrix(c(10, 20, 40, 60), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+out_4st_emotion <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        start_val = c(list(start_gamma_4st), start_emiss_4st),
+                        emiss_hyp_prior = emotion_prior_emiss_4st,
+                        mcmc = list(J = 500, burn_in = 200))
+
+saveRDS(out_4st_emotion, file = "out_4st_emotion.rds")
+
+out_4st_emotion
+summary(out_4st_emotion)
+
+## checking traceplots ####
 data1 <- out_2st_emotion
 J <- 500
 burn_in <- 200

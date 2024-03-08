@@ -341,7 +341,16 @@ PPCs can be used to assess model fit at both the individual and group-level.
 
 ## Model checking: Pseudo residuals 
 
+Using the 
 
+- sequence of most likely states for each subject
+- subject specific parameter estimates for the emission distribution 
+
+we can predict the most likely outcome at each point in time. E.g., when modelling continuous data, the subject and state specific mean for the state most likely at each time point. 
+
+Hence, we can also obtain (pseudo) residuals at each time point: observed - predicted outcome. 
+
+On these pseudo residuals, we can do the usual residual checking: e.g., normality, heteroscedasticity, lack of trend over time. Most informative at the subject level: does the model fit each subject specifically? 
 
 ## References 
 

@@ -2,27 +2,29 @@
 title: "More advanced matters"
 mainfont: Arial
 params:
-  answers: true
+  answers: false
 fontsize: 12pt
 urlcolor: blue
 output: 
   html_document:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     toc_float: true
     theme: paper
     pandoc_args: --output=More_advanced_pract.html
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 library(mHMMbayes)
+library(ggplot2)
 library(viridis)
 library(reshape2)
 emotion_data <- readRDS("./data/data_Rowland2020.rds")
+out_2st_emotion <- readRDS("./data/out_2st_emotion.rds")
 ```
 
-This is the second practical, where we will into more advanced matters: subject specific parameters, covariates, model selection, and model fit. In contrary to the first practical, the different parts do not build up on oneanother, so you are free to choose any order you like, starting with the topic you find most interesting. There is quite some material and it is likely you will not be able to finish all of them, but the topics you have skipped can be completed at your own conveinience at a later moment. 
+This is the second practical, where we will into more advanced matters: subject specific parameters, model selection, and model fit. We continue with the same dataset: the open access dataset from Rowland and Wenzel (2020) containing affective experiences *happy*, *excited*, *relaxed*, *satisfied*, *angry*, *anxious*, *depressed*, and *sad*, measured six times a day for 40 days in total. In contrary to the first practical, the different parts do not build up on one another, so you are free to choose any order you like, starting with the topic you find most interesting. There is quite some material and it is likely you will not be able to finish all of them, but the topics you have skipped can be completed at your own convenience at a later moment. 
 
 The answers to the practicals are available in the `*_answers.html` files. Try to work out the answer yourself (e.g., inspecting help files and examples in them provided in the `mHMMbayes` package, looking at the tutorial vignette available online) before looking at this!
 
@@ -43,6 +45,288 @@ library(viridis)    # optional
 ## Model selection
 
 One of the challenges when using hidden Markov models is the number of states to choose. Here, we will limit ourselves to models with 2, 3, and 4 states. As model checking is discussed at a later point in the practical, we will investigate the different models based on the state composition and the model fit criterion AIC. The 2-state model was fitted in the first practical, and saved in the object `out_2st_emotion`. 
+
+---
+
+**Exercise 1**
+Fit a 3- and 4- state multilevel HMM model, and save the fitted models in the objects `out_3st_emotion` and `out_4st_emotion`, respectively. Again we recommend 500 MCMC iterations and a burn-in of 200, or a bit less if this takes a lot of time. Note that with this new models, also new starting values and and hyper-prior parameter values have to be specificied. To speed up the process somewhat, below a suggestion for new starting and prior values is given. 
+
+```{r, echo = TRUE}
+####################
+# 3 state model 
+####################
+
+## general model properties
+m <- 3
+n_dep <- 8
+
+## starting values for gamma
+start_gamma_3st <- matrix(c(0.8, 0.1, 0.1,
+                        0.1, 0.8, 0.1,
+                        0.1, 0.1, 0.8), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_3st <- list(matrix(c(80, 10,                                     # happy
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # excited
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # relaxed
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # satisfied
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # angry
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # anxious
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # depressed
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # sad
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_3st <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 50, 20), nrow = 1),  # happy
+                   matrix(c(80, 50, 20), nrow = 1),  # excited
+                   matrix(c(80, 50, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 50, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 30, 50), nrow = 1),  # angry
+                   matrix(c(10, 30, 50), nrow = 1),  # anxious
+                   matrix(c(10, 30, 50), nrow = 1),  # depressed
+                   matrix(c(10, 30, 50), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+####################
+# 4 state model
+####################
+
+## general model properties
+m <- 4
+n_dep <- 8
+
+## starting values for gamma
+start_gamma_4st <- matrix(c(0.7, 0.1, 0.1, 0.1,
+                            0.1, 0.7, 0.1, 0.1,
+                            0.1, 0.1, 0.7, 0.1,
+                            0.1, 0.1, 0.1, 0.7), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_4st <- list(matrix(c(80, 10,                                     # happy
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # excited
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # relaxed
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # satisfied
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # angry
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # anxious
+                             320, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # depressed
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # sad
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_4st <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 60, 40, 20), nrow = 1),  # happy
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # excited
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # angry
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # anxious
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # depressed
+                   matrix(c(10, 20, 40, 60), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+```
+
+```{r, include = params$answers, eval = FALSE}
+# Fitting the 3 state model 
+m <- 3
+out_3st_emotion <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        start_val = c(list(start_gamma_3st), start_emiss_3st),
+                        emiss_hyp_prior = emotion_prior_emiss_3st,
+                        mcmc = list(J = 500, burn_in = 200))
+
+# Fitting the 4 state model 
+m <- 4
+out_4st_emotion <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        start_val = c(list(start_gamma_4st), start_emiss_4st),
+                        emiss_hyp_prior = emotion_prior_emiss_4st,
+                        mcmc = list(J = 500, burn_in = 200))
+
+```
+
+```{r, echo  = FALSE}
+out_3st_emotion <- readRDS("./data/out_3st_emotion.rds")
+out_4st_emotion <- readRDS("./data/out_4st_emotion.rds")
+```
+---
+
+
+---
+
+**Exercise 2**
+Inspect the general output of the 3- and 4- state models by using the inbuilt `print()` and `summary()` for objects of class `mHMM` returned by the `mHMM()` function. 
+
+```{r, include = params$answers}
+# 3 state model 
+out_3st_emotion
+summary(out_3st_emotion)
+
+# 4 state model 
+out_4st_emotion
+summary(out_4st_emotion)
+```
+
+---
+
+First, we will investigate the composition of the states, and using this to evaluate whether it seems to make sense to add extra states. Especially with multivariate data, inspecting the composition of the states is done most easily visually. 
+
+---
+
+**Exercise 3**
+Use your code from practical 1 to visualize the group level emission distributions of the 3- and 4-state model and compare to the 2-state model. Note: remember to first save the emission distribution paramters in an object using the function `obtain_emiss()`, Does it seem to make sense to add extra state(s)?
+
+```{r, include = params$answers, fig.height=4}
+###############
+# 3 state model 
+###############
+
+emiss_group_3st <- obtain_emiss(out_3st_emotion)
+m <- 3
+## plotting group level emissions, bar plot
+## reshaping data for ggplot to make one plot simultaneously for all dependent variables 
+## meaning: one matrix containing all state and variable dependent means, with state and mood as variable 
+emiss_group_3st <- lapply(emiss_group_3st, function(x,m){rownames(x) <- paste0(1:m);x}, m = m)
+emiss_group_melt_3st <- lapply(emiss_group_3st, melt)
+emiss_group_melt_3st <- do.call(rbind, emiss_group_melt_3st)
+emiss_group_melt_3st <- emiss_group_melt_3st[emiss_group_melt_3st$Var2 == "Mean", c(1, 3)]
+colnames(emiss_group_melt_3st) <- c("State", "Mean")
+emiss_group_melt_3st$Dep <- factor(c(rep(names(emiss_group_3st), each = m)), levels = names(emiss_group_3st))
+emiss_group_melt_3st$State <- factor(emiss_group_melt_3st$State, label = 1:m)
+
+## plot
+ggplot(emiss_group_melt_3st, aes(x = State, y = Mean, fill = Dep)) +
+         geom_bar(stat="identity") +
+  facet_grid(cols = vars(Dep)) + 
+  theme_minimal() +
+  theme(legend.position="none") +
+  xlab("Mood state")
+
+# Note: although the first 2 states do not really differ for the postive affect measures, the first 2 states do differentiate on the negative affect variables. 
+
+###############
+# 4 state model 
+###############
+
+emiss_group_4st <- obtain_emiss(out_4st_emotion)
+m <- 4
+## plotting group level emissions, bar plot
+## reshaping data for ggplot to make one plot simultaneously for all dependent variables 
+## meaning: one matrix containing all state and variable dependent means, with state and mood as variable 
+emiss_group_4st <- lapply(emiss_group_4st, function(x,m){rownames(x) <- paste0(1:m);x}, m = m)
+emiss_group_melt_4st <- lapply(emiss_group_4st, melt)
+emiss_group_melt_4st <- do.call(rbind, emiss_group_melt_4st)
+emiss_group_melt_4st <- emiss_group_melt_4st[emiss_group_melt_4st$Var2 == "Mean", c(1, 3)]
+colnames(emiss_group_melt_4st) <- c("State", "Mean")
+emiss_group_melt_4st$Dep <- factor(c(rep(names(emiss_group_4st), each = m)), levels = names(emiss_group_4st))
+emiss_group_melt_4st$State <- factor(emiss_group_melt_4st$State, label = 1:m)
+
+## plot
+ggplot(emiss_group_melt_4st, aes(x = State, y = Mean, fill = Dep)) +
+         geom_bar(stat="identity") +
+  facet_grid(cols = vars(Dep)) + 
+  theme_minimal() +
+  theme(legend.position="none") +
+  xlab("Mood state")
+
+# Note: the 4th state does differentate the emotions even more, but not as much as adding the third state. 
+```
+
+---
+
+Next, let's compare the 2-, 3-, and 4-state model on the model selection criteria AIC. 
+
+
+---
+
+**Exercise 4**
+Obtain the AIC values of the 2-, 3-, and 4-state model using the `print()` function on the mHMM objects `out_2st_emotion`, `out_3st_emotion`, `out_4st_emotion`, and compare. Note: it can be helpful to visualize the AIC values over the states to get a feeling for how much the AIC decreases over the models. 
+
+```{r, include = params$answers, fig.height=4}
+out_2st_emotion
+out_3st_emotion
+out_4st_emotion
+
+AICs <- data.frame(AIC = c(11657.01, 11453.64, 11357.04),
+                   states = c(2:4))
+ggplot(AICs, mapping = aes(x = states, y = AIC)) +
+  geom_point() + 
+  geom_line() +
+  ggtitle("AIC over the 2 - 4 state models") + 
+  xlab("Number of states") +
+  theme_minimal()
+
+```
+
+---
+
+As you can see, determining the number of states can be a subjective and tricky endeavor, and depends very much on the data and research question at hand.  
+
+## Subject specific parameters
+
+
+## Model fit
+
+### Convergence
+
+### PPCs
+
+
+
+
 
 
 

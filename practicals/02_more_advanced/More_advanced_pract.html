@@ -1507,13 +1507,17 @@ border-radius: 0px;
 
 
 <p>This is the second practical, where we will into more advanced
-matters: subject specific parameters, covariates, model selection, and
-model fit. In contrary to the first practical, the different parts do
-not build up on oneanother, so you are free to choose any order you
-like, starting with the topic you find most interesting. There is quite
-some material and it is likely you will not be able to finish all of
-them, but the topics you have skipped can be completed at your own
-conveinience at a later moment.</p>
+matters: subject specific parameters, model selection, and model fit. We
+continue with the same dataset: the open access dataset from Rowland and
+Wenzel (2020) containing affective experiences <em>happy</em>,
+<em>excited</em>, <em>relaxed</em>, <em>satisfied</em>, <em>angry</em>,
+<em>anxious</em>, <em>depressed</em>, and <em>sad</em>, measured six
+times a day for 40 days in total. In contrary to the first practical,
+the different parts do not build up on one another, so you are free to
+choose any order you like, starting with the topic you find most
+interesting. There is quite some material and it is likely you will not
+be able to finish all of them, but the topics you have skipped can be
+completed at your own convenience at a later moment.</p>
 <p>The answers to the practicals are available in the
 <code>*_answers.html</code> files. Try to work out the answer yourself
 (e.g., inspecting help files and examples in them provided in the
@@ -1536,6 +1540,181 @@ practical, we will investigate the different models based on the state
 composition and the model fit criterion AIC. The 2-state model was
 fitted in the first practical, and saved in the object
 <code>out_2st_emotion</code>.</p>
+<hr />
+<p><strong>Exercise 1</strong> Fit a 3- and 4- state multilevel HMM
+model, and save the fitted models in the objects
+<code>out_3st_emotion</code> and <code>out_4st_emotion</code>,
+respectively. Again we recommend 500 MCMC iterations and a burn-in of
+200, or a bit less if this takes a lot of time. Note that with this new
+models, also new starting values and and hyper-prior parameter values
+have to be specificied. To speed up the process somewhat, below a
+suggestion for new starting and prior values is given.</p>
+<pre class="r"><code>####################
+# 3 state model 
+####################
+
+## general model properties
+m &lt;- 3
+n_dep &lt;- 8
+
+## starting values for gamma
+start_gamma_3st &lt;- matrix(c(0.8, 0.1, 0.1,
+                        0.1, 0.8, 0.1,
+                        0.1, 0.1, 0.8), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_3st &lt;- list(matrix(c(80, 10,                                     # happy
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # excited
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # relaxed
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # satisfied
+                             50, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # angry
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # anxious
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # depressed
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # sad
+                             30, 10,
+                             50, 15), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_3st &lt;- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 50, 20), nrow = 1),  # happy
+                   matrix(c(80, 50, 20), nrow = 1),  # excited
+                   matrix(c(80, 50, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 50, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 30, 50), nrow = 1),  # angry
+                   matrix(c(10, 30, 50), nrow = 1),  # anxious
+                   matrix(c(10, 30, 50), nrow = 1),  # depressed
+                   matrix(c(10, 30, 50), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+####################
+# 4 state model
+####################
+
+## general model properties
+m &lt;- 4
+n_dep &lt;- 8
+
+## starting values for gamma
+start_gamma_4st &lt;- matrix(c(0.7, 0.1, 0.1, 0.1,
+                            0.1, 0.7, 0.1, 0.1,
+                            0.1, 0.1, 0.7, 0.1,
+                            0.1, 0.1, 0.1, 0.7), byrow = TRUE, ncol = m, nrow = m)
+
+## starting values for the emission distribution 
+start_emiss_4st &lt;- list(matrix(c(80, 10,                                     # happy
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # excited
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # relaxed
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(80, 10,                                     # satisfied
+                             60, 10,
+                             40, 10,
+                             20, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # angry
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # anxious
+                             320, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # depressed
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(10,  5,                                     # sad
+                             20, 10,
+                             40, 10,
+                             60, 10), byrow = TRUE, ncol = 2, nrow = m))
+
+## specifying weakly informative prior for continuous emission distributions
+emotion_prior_emiss_4st &lt;- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(80, 60, 40, 20), nrow = 1),  # happy
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # excited
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # relaxed
+                   matrix(c(80, 60, 40, 20), nrow = 1),  # satisfied
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # angry
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # anxious
+                   matrix(c(10, 20, 40, 60), nrow = 1),  # depressed
+                   matrix(c(10, 20, 40, 60), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)</code></pre>
+<hr />
+<hr />
+<p><strong>Exercise 2</strong> Inspect the general output of the 3- and
+4- state models by using the inbuilt <code>print()</code> and
+<code>summary()</code> for objects of class <code>mHMM</code> returned
+by the <code>mHMM()</code> function.</p>
+<hr />
+<p>First, we will investigate the composition of the states, and using
+this to evaluate whether it seems to make sense to add extra states.
+Especially with multivariate data, inspecting the composition of the
+states is done most easily visually.</p>
+<hr />
+<p><strong>Exercise 3</strong> Use your code from practical 1 to
+visualize the group level emission distributions of the 3- and 4-state
+model and compare to the 2-state model. Note: remember to first save the
+emission distribution paramters in an object using the function
+<code>obtain_emiss()</code>, Does it seem to make sense to add extra
+state(s)?</p>
+<hr />
+<p>Next, let’s compare the 2-, 3-, and 4-state model on the model
+selection criteria AIC.</p>
+<hr />
+<p><strong>Exercise 4</strong> Obtain the AIC values of the 2-, 3-, and
+4-state model using the <code>print()</code> function on the mHMM
+objects <code>out_2st_emotion</code>, <code>out_3st_emotion</code>,
+<code>out_4st_emotion</code>, and compare. Note: it can be helpful to
+visualize the AIC values over the states to get a feeling for how much
+the AIC decreases over the models.</p>
+<hr />
+<p>As you can see, determining the number of states can be a subjective
+and tricky endeavor, and depends very much on the data and research
+question at hand.</p>
+</div>
+<div id="subject-specific-parameters" class="section level2">
+<h2>subject specific parameters</h2>
+</div>
+<div id="model-fit" class="section level2">
+<h2>model fit</h2>
+<div id="convergence" class="section level3">
+<h3>Convergence</h3>
+</div>
+<div id="ppcs" class="section level3">
+<h3>PPCs</h3>
+</div>
 </div>
 
 
@@ -1587,7 +1766,7 @@ $(document).ready(function ()  {
 
     // establish options
     var options = {
-      selectors: "h1,h2",
+      selectors: "h1,h2,h3",
       theme: "bootstrap3",
       context: '.toc-content',
       hashGenerator: function (text) {
