@@ -263,6 +263,182 @@ saveRDS(out_4st_emotion, file = "out_4st_emotion.rds")
 out_4st_emotion
 summary(out_4st_emotion)
 
+
+
+## Including covariate ##
+# specify a list with the correct number of elements, where all elements are set to NULL
+out_2st_emotion <- readRDS("./practicals/02_more_advanced/data/out_2st_emotion.rds")
+covariate <- vector("list", length = 1 + n_dep)
+
+# extract the covariate `group`
+group <- apply(table(emotion_data$subj_id, emotion_data$group), 1, which.max)
+group <- group - 1
+
+# specify the first element of the list, where the first column consists of ones only,  
+# the second column contains the covariate group, with only one entry per subject
+n_subj <- out_2st_emotion$input$n_subj
+covariate[[1]] <- matrix(c(rep(1,n_subj), 
+                           group), byrow = FALSE, ncol = 2)
+covariate
+
+m <- 2
+n_dep <- 8
+
+start_gamma <- matrix(c(0.7, 0.3, 
+                        0.3, 0.7), byrow = TRUE, ncol = m, nrow = m)
+
+start_emiss <- list(matrix(c(70, 15,                                     # happy
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # excited
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # relaxed
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(70, 15,                                     # satisfied
+                             30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # angry
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # anxious
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # depressed
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                    matrix(c(15, 10,                                     # sad
+                             40, 15), byrow = TRUE, ncol = 2, nrow = m))
+
+emotion_prior_emiss <- prior_emiss_cont(
+  gen = list(m = m, n_dep = n_dep),
+  emiss_mu0 = list(matrix(c(70, 30), nrow = 1),  # happy
+                   matrix(c(70, 30), nrow = 1),  # excited
+                   matrix(c(70, 30), nrow = 1),  # relaxed
+                   matrix(c(70, 30), nrow = 1),  # satisfied
+                   matrix(c(15, 40), nrow = 1),  # angry
+                   matrix(c(15, 40), nrow = 1),  # anxious
+                   matrix(c(15, 40), nrow = 1),  # depressed
+                   matrix(c(15, 40), nrow = 1)), # sad 
+  emiss_K0 = rep(list(1), n_dep),
+  emiss_V = rep(list(rep(5^2, m)), n_dep),
+  emiss_nu = rep(list(1), n_dep),
+  emiss_a0 = rep(list(rep(1.5, m)), n_dep),
+  emiss_b0 = rep(list(rep(20, m)), n_dep),
+)
+
+
+out_2st_emotion_cov <- mHMM(s_data = emotion_mHMM,
+                        data_distr = "continuous",
+                        gen = list(m = m, n_dep = n_dep),
+                        xx = covariate,
+                        start_val = c(list(start_gamma), start_emiss),
+                        emiss_hyp_prior = emotion_prior_emiss,
+                        mcmc = list(J = 500, burn_in = 200))
+
+saveRDS(out_2st_emotion_cov, file = "out_2st_emotion_cov.rds")
+
+burn_in <- 200
+J <- 500
+summary_covariate <- data.frame(median = 
+                                  apply(out_2st_emotion_cov$gamma_cov_bar[burn_in:J,], 2, median),
+                                lower_CrI = 
+                                  apply(out_2st_emotion_cov$gamma_cov_bar[burn_in:J,], 2, quantile, 0.025),
+                                upper_CrI =
+                                  apply(out_2st_emotion_cov$gamma_cov_bar[burn_in:J,], 2, quantile, 0.975))
+
+
+
+
+emiss_subject <- obtain_emiss(out_2st_emotion, level = "subject")
+vars <- names(emiss_subject)
+gg_emiss_subject <- data.frame(Subj = rep(rep(1:n_subj, each = m), n_dep),
+                               State = rep(1:m, n_subj * n_dep), 
+                               Dep = factor(c(rep(vars, each = m * n_subj))))
+                                            
+gg_emiss_subject$Mean <-c(unlist(lapply(emiss_subject[[1]], "[", 1:m)), 
+                                                                      unlist(lapply(emiss_subject[[2]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[3]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[4]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[5]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[6]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[7]], "[", 1:m)),
+                                                                      unlist(lapply(emiss_subject[[8]], "[", 1:m)))
+
+
+vars <- names(emiss_subject)
+gg_emiss_subject <- data.frame(Subj = rep(rep(1:n_subj, each = m), n_dep),
+                               State = rep(1:m, n_subj * n_dep), 
+                               Dep = factor(c(rep(vars, each = m * n_subj)), levels = vars))
+
+gg_emiss_subject$Mean <-c(unlist(lapply(emiss_subject[[1]], "[", 1:m)), 
+                          unlist(lapply(emiss_subject[[2]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[3]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[4]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[5]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[6]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[7]], "[", 1:m)),
+                          unlist(lapply(emiss_subject[[8]], "[", 1:m)))
+
+library(reshape2)
+emiss_group <- obtain_emiss(out_2st_emotion)
+
+emiss_group <- lapply(emiss_group, function(x,m){rownames(x) <- paste0(1:m);x}, m = m)
+emiss_group_melt <- lapply(emiss_group, melt)
+emiss_group_melt <- do.call(rbind, emiss_group_melt)
+emiss_group_melt <- emiss_group_melt[emiss_group_melt$Var2 == "Mean", c(1, 3)]
+colnames(emiss_group_melt) <- c("State", "Mean")
+emiss_group_melt$Dep <- factor(c(rep(vars, each = m)), levels = names(emiss_group))
+emiss_group_melt$State <- factor(emiss_group_melt$State, label = 1:m)
+
+ggplot(emiss_group_melt, aes(x = State, y = Mean, fill = Dep)) +
+  geom_bar(stat="identity") +
+  geom_point(data = gg_emiss_subject[gg_emiss_subject$Subj %in% 1:50,], aes(x = State, y = Mean, fill = Dep), 
+             alpha = 0.5, colour="black",pch=21) +
+  geom_line(data = gg_emiss_subject[gg_emiss_subject$Subj %in% 1:50,], aes(x = State, y = Mean, group = Subj), color = "grey", alpha = 0.5) +
+  facet_grid(cols = vars(Dep)) + 
+  theme_minimal() +
+  theme(legend.position="none") +
+  xlab("Mood state")
+
+library(ggplot2)
+## plot
+ggplot(emiss_group_melt, aes(x = State, y = Mean, fill = Dep)) +
+  geom_bar(stat="identity") +
+  geom_jitter(data = gg_emiss_subject, aes(x = State, y = Mean, color = Dep)) +
+  facet_grid(cols = vars(Dep)) + 
+  theme_minimal() +
+  theme(legend.position="none") +
+  xlab("Mood state")
+
+## Fitting 2 state model with different starting values ####
+m <- 2
+n_dep <- 8
+
+start_gamma_b <- matrix(c(0.9, 0.1, 
+                          0.1, 0.9), byrow = TRUE, ncol = m, nrow = m)
+
+start_emiss_b <- list(matrix(c(80, 10,                                     # happy
+                               40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(80, 10,                                     # happy
+                               40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(80, 10,                                     # happy
+                               40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(80, 10,                                     # happy
+                               40, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(5, 5,                                     # angry
+                               30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(5, 5,                                     # angry
+                               30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(5, 5,                                     # angry
+                               30, 15), byrow = TRUE, ncol = 2, nrow = m), 
+                      matrix(c(5, 5,                                     # angry
+                               30, 15), byrow = TRUE, ncol = 2, nrow = m))
+
+
+out_2st_emotion_b <- mHMM(s_data = emotion_mHMM,
+                          data_distr = "continuous",
+                          gen = list(m = m, n_dep = n_dep),
+                          start_val = c(list(start_gamma_b), start_emiss_b),
+                          emiss_hyp_prior = emotion_prior_emiss,
+                          mcmc = list(J = 500, burn_in = 200))
+
+saveRDS(out_2st_emotion_b, file = "out_2st_emotion_b.rds")
+
 ## checking traceplots ####
 data1 <- out_2st_emotion
 J <- 500
