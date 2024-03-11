@@ -350,7 +350,7 @@ we can predict the most likely outcome at each point in time. E.g., when modelli
 
 Hence, we can also obtain (pseudo) residuals at each time point: observed - predicted outcome. 
 
-On these pseudo residuals, we can do the usual residual checking: e.g., normality, heteroscedasticity, lack of trend over time. Most informative at the subject level: does the model fit each subject specifically? 
+On these pseudo residuals, we can do the usual residual checking: e.g., normality, heteroscedasticity, lack of trend over time, and autocorrelation. Most informative at the subject level: does the model fit each subject specifically? 
 
 ## References 
 

@@ -1,5 +1,3 @@
-Note: being developed as we speak! 
-
 # Extracting personalised latent dynamics using multilevel hidden Markov models
 This webpage contains all the materials for an afternoon workshop on extracting personalised latent dynamics using multilevel hidden Markov models. The materials on this website are [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) licensed.
 
@@ -40,7 +38,7 @@ install.packages(c("ggplot2", "mHMMbayes"))
 | 14:15 | 45       | Practical    | Fitting a mHMM + group level parameters                         | [`intro.html`](./practicals/01_introduction/Intro_pract.html) |
 | 15:00 | 15       | Break        |                                                                 |      |
 | 15:15 | 45       | Lecture      | Model selection and fit + subject level parameters + covariates | [`More_advanced.hmtl`](./lectures/02_More_advanced/More_advanced.html) |
-| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters              | [`More_advanced_pract.html`](./practicals/02_more_advanced/More_advanced_pract.html) |
+| 16:00 | 45       | Practical    | Model selection and fit + subject level parameters + covariates | [`More_advanced_pract.html`](./practicals/02_more_advanced/More_advanced_pract.html) |
 | 16:45 | 15       | Conclusion   | Final points + questions                                        |  [`Final_points.html`](./lectures/03_final_points/Final_points.html)    |
 
 You can download the dataset we will be using from [`here`](https://github.com/jmbh/EmotionTimeSeries/tree/master/DataClean/Rowland2020), see practical 1 for an introduction of the dataset and references. Save it in a nicely accessible place, we will be using it in every practical.
