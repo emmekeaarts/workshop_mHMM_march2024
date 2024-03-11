@@ -15,11 +15,13 @@ At the end of this session, participants have a firm grasp of the basics of the 
 
 ## Prerequisites
 
-Please bring your laptops. We assume the following:
+Please bring your laptops. To work with the workshop materials, please load the full documentation package `workshop_mHMM_march2024` as a `.zip` file (near the top of this webpage, under the green `Code` button, you can find the option `Download ZIP`). 
 
-- you are comfortable with estimating and interpreting univariate and multivariate statistical models such as regression models
-- you are familiar with the `R` programming language and you have a recent version installed
-- it's a bonus if you are somewhat familiar with xx
+We assume the following:
+
+- you are comfortable with estimating and interpreting univariate and multivariate statistical models such as regression models.
+- you are familiar with the `R` programming language and you have a recent version installed.
+- it's a bonus if you are somewhat familiar with hidden Markov models.
 - you have installed the following `R` packages on your computer:
   - `mHMMbayes` (version 1.0.0)
   - `ggplot2`
