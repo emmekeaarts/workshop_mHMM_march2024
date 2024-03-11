@@ -19,10 +19,10 @@ Please bring your laptops. To work with the workshop materials, please load the 
 
 We assume the following:
 
-- you are comfortable with estimating and interpreting univariate and multivariate statistical models such as regression models.
-- you are familiar with the `R` programming language and you have a recent version installed.
-- it's a bonus if you are somewhat familiar with hidden Markov models.
-- you have installed the following `R` packages on your computer:
+- You are comfortable with estimating and interpreting univariate and multivariate statistical models such as regression models.
+- You are familiar with the `R` programming language and you have a recent version installed.
+- It's a bonus if you are somewhat familiar with hidden Markov models.
+- You have installed the following `R` packages on your computer:
   - `mHMMbayes` (version 1.0.0)
   - `ggplot2`
 
